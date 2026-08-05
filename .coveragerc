@@ -1,0 +1,15 @@
+[run]
+source = agent
+omit =
+    agent/collectors/*
+    agent/compliance_monitor.py
+    agent/vpn_api.py
+    agent/usb_monitor.py
+    agent/tests/*
+    agent/config.py
+    agent/agent.py
+
+[report]
+fail_under = 70
+show_missing = True
+skip_covered = False

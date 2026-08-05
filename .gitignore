@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment
+venv
+.env
+.env.*
+
+# Logs
+*.log
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage.xml
+htmlcov/
+.coverage
+coverage.xml
+
+# Database
+*.db
+
+agent/state.json
+agent_identity.json

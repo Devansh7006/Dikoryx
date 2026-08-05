@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic
+sqlalchemy
+requests
+psycopg2-binary
+scikit-learn
+
+argon2-cffi
+python-dotenv
+httpx
+passlib[bcrypt]
+pyyaml

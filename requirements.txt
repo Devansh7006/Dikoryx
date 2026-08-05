@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+psycopg2-binary
+requests
+pyyaml
+scikit-learn
+argon2-cffi
+pytest
+pytest-cov
+httpx
+python-dotenv
+watchdog
+pywin32
+python-multipart

@@ -1,0 +1,1 @@
+1 fixed Problem #1 (Weak Device Fingerprinting) by upgrading the fingerprint generation from Hostname + MAC to Machine GUID + Hostname + MAC + OS, making device identification much more reliable and resistant to hostname changes or MAC spoofing.
