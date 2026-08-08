@@ -15,12 +15,7 @@ from backend.database import (
 from backend.dlp_engine import evaluate_dlp
 from backend.risk_engine import compute_risk
 from backend.state import events, systems
-@app.get("/health")
-def health():
-    return {
-        "status": "healthy",
-        "service": "dikoryx-backend"
-    }
+
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -51,7 +46,23 @@ async def no_cache_middleware(request, call_next):
     return response
 
 app.middleware("http")(no_cache_middleware)
+# ------------------ Health Check ------------------
 
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy",
+        "service": "dikoryx-backend"
+    }
+
+
+init_db()
+
+
+app.include_router(auth.router)
+app.include_router(organizations.router)
+app.include_router(agents.router)
+app.include_router(telemetry.router)
 # ------------------ CORS ------------------
 
 app.add_middleware(
