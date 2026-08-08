@@ -15,7 +15,12 @@ from backend.database import (
 from backend.dlp_engine import evaluate_dlp
 from backend.risk_engine import compute_risk
 from backend.state import events, systems
-
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy",
+        "service": "dikoryx-backend"
+    }
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
