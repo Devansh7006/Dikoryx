@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dikoryx - Full System Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #060911;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    padding: 30px;
+    width: 2400px;
+    height: 1400px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* Cyber Grid Background */
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .canvas {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(0, 240, 255, 0.3);
+    padding-bottom: 20px;
+    margin-bottom: 25px;
+  }
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .shield-icon {
+    font-size: 55px;
+    filter: drop-shadow(0 0 15px #00f0ff);
+  }
+  .title-text h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #00f0ff 0%, #7000ff 50%, #ff007f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title-text p {
+    font-size: 19px;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    font-weight: 500;
+    margin-top: 4px;
+  }
+  .badge-cluster {
+    display: flex;
+    gap: 12px;
+  }
+  .badge {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 15px;
+    font-family: 'Consolas', monospace;
+    color: #00f0ff;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+  }
+  .badge.purple { border-color: #a855f7; color: #c084fc; box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+  .badge.green { border-color: #10b981; color: #34d399; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+
+  /* Main Grid */
+  .grid-container {
+    display: grid;
+    grid-template-columns: 460px 480px 480px 460px 420px;
+    gap: 20px;
+    flex: 1;
+    margin-bottom: 25px;
+  }
+
+  .layer-card {
+    background: rgba(11, 19, 38, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    backdrop-filter: blur(10px);
+  }
+  .layer-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 14px 14px 0 0;
+  }
+  .card-soc::before { background: linear-gradient(90deg, #00f0ff, #3b82f6); }
+  .card-api::before { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+  .card-risk::before { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+  .card-agent::before { background: linear-gradient(90deg, #10b981, #00f0ff); }
+  .card-db::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+
+  .layer-title {
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .layer-sub {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 20px;
+    font-family: 'Consolas', monospace;
+  }
+
+  /* Components inside cards */
+  .comp-box {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
+    transition: all 0.2s;
+  }
+  .comp-box.highlight-cyan {
+    border-color: rgba(0, 240, 255, 0.4);
+    background: rgba(0, 240, 255, 0.04);
+  }
+  .comp-box.highlight-green {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.04);
+  }
+  .comp-box.highlight-pink {
+    border-color: rgba(236, 72, 153, 0.4);
+    background: rgba(236, 72, 153, 0.04);
+  }
+  .comp-box.highlight-purple {
+    border-color: rgba(168, 85, 247, 0.4);
+    background: rgba(168, 85, 247, 0.04);
+  }
+  .comp-box.highlight-amber {
+    border-color: rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.04);
+  }
+
+  .comp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .comp-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f1f5f9;
+  }
+  .comp-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-weight: 600;
+  }
+  .tag-cyan { background: rgba(0, 240, 255, 0.15); color: #00f0ff; }
+  .tag-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+  .tag-pink { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
+  .tag-purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+  .tag-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+  .comp-desc {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+  .comp-list {
+    margin-top: 8px;
+    list-style: none;
+  }
+  .comp-list li {
+    font-size: 12.5px;
+    color: #cbd5e1;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .comp-list li::before {
+    content: '▹';
+    color: #00f0ff;
+    font-size: 14px;
+  }
+  .comp-list.green li::before { color: #10b981; }
+  .comp-list.pink li::before { color: #ec4899; }
+  .comp-list.amber li::before { color: #f59e0b; }
+
+  /* Flow Ribbon at Bottom */
+  .flow-ribbon {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 12px;
+    padding: 18px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.08);
+  }
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .step-num {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(0, 240, 255, 0.15);
+    border: 1px solid #00f0ff;
+    color: #00f0ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    font-weight: 800;
+    font-family: 'Consolas', monospace;
+  }
+  .step-info h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+  .step-info p {
+    font-size: 12.5px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+  .flow-arrow {
+    color: #38bdf8;
+    font-size: 26px;
+    font-weight: 300;
+  }
+
+  .mono { font-family: 'Consolas', monospace; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="title-group">
+      <div class="shield-icon">🛡️</div>
+      <div class="title-text">
+        <h1>DIKORYX — SYSTEM ARCHITECTURE & DATA FLOW</h1>
+        <p>Next-Gen Behavioral Insider Threat Detection, Real-Time Telemetry & Automated CIS Compliance Engine</p>
+      </div>
+    </div>
+    <div class="badge-cluster">
+      <div class="badge">Zero-Trust Architecture</div>
+      <div class="badge green">CIS Benchmark v8 Enforced</div>
+      <div class="badge purple">Hybrid ML (IsolationForest)</div>
+      <div class="badge">FastAPI + React 18</div>
+    </div>
+  </div>
+
+  <!-- Grid Layers -->
+  <div class="grid-container">
+
+    <!-- LAYER 1: ENDPOINT AGENT -->
+    <div class="layer-card card-agent">
+      <div class="layer-title" style="color: #34d399;">
+        <span>🖥️</span> 01. Endpoint Daemon
+      </div>
+      <div class="layer-sub">Python 3.11+ Background Service</div>
+
+      <div class="comp-box highlight-green">
+        <div class="comp-header">
+          <span class="comp-name">CIS Compliance Auditor</span>
+          <span class="comp-tag tag-green">CIS v8</span>
+        </div>
+        <div class="comp-desc">Continuous audit of endpoint security controls:</div>
+        <ul class="comp-list green">
+          <li>Windows Defender Firewall (All Profiles)</li>
+          <li>BitLocker Disk Encryption (Protection On)</li>
+          <li>Screen Lock Policy (&le;300s + Password Secure)</li>
+          <li>Windows Defender Antivirus (AMService)</li>
+          <li>USB Storage Policy (USBSTOR lockdown)</li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-green">
+        <div class="comp-header">
+          <span class="comp-name">Auto-Policy Enforcer</span>
+          <span class="comp-tag tag-green">Self-Healing</span>
+        </div>
+        <div class="comp-desc">Remediates configuration drift automatically:</div>
+        <ul class="comp-list green">
+          <li><span class="mono">netsh advfirewall set allprofiles</span> state on</li>
+          <li>Registry enforcement: <span class="mono">ScreenSaveActive=1</span></li>
+          <li>Registry lockdown: <span class="mono">USBSTOR Start=4</span></li>
+          <li>Tags remediation in <span class="mono">COMPLIANCE_STATUS</span></li>
+        </ul>
+      </div>
+
+      <div class="comp-box">
+        <div class="comp-header">
+          <span class="comp-name">Telemetry Collectors</span>
+          <span class="comp-tag tag-cyan">Sensors</span>
+        </div>
+        <ul class="comp-list">
+          <li><strong>File Ops:</strong> Directory watcher for mass writes/deletions</li>
+          <li><strong>USB Monitor:</strong> Insertion events & file signature scans</li>
+          <li><strong>Network Bandwidth:</strong> <span class="mono">psutil</span> Tx/Rx byte telemetry</li>
+          <li><strong>VPN/Proxy Detection:</strong> Public IP & ASN analysis</li>
+          <li><strong>Process & Clipboard:</strong> Churn & data hooks</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LAYER 2: API GATEWAY -->
+    <div class="layer-card card-api">
+      <div class="layer-title" style="color: #38bdf8;">
+        <span>⚙️</span> 02. API Gateway
+      </div>
+      <div class="layer-sub">FastAPI + Uvicorn ASGI Engine</div>
+
+      <div class="comp-box highlight-cyan">
+        <div class="comp-header">
+          <span class="comp-name">Ingestion & Telemetry API</span>
+          <span class="comp-tag tag-cyan">High-Throughput</span>
+        </div>
+        <div class="comp-desc">Batch ingestion endpoints:</div>
+        <ul class="comp-list">
+          <li><span class="mono">POST /api/v1/telemetry</span>: Batched event stream</li>
+          <li><span class="mono">POST /api/v1/compliance</span>: Control status events</li>
+          <li>Low-latency async handling via thread pool</li>
+          <li>JSON Schema validation via Pydantic models</li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-cyan">
+        <div class="comp-header">
+          <span class="comp-name">Identity & Access Guard</span>
+          <span class="comp-tag tag-cyan">Security</span>
+        </div>
+        <div class="comp-desc">Authentication services:</div>
+        <ul class="comp-list">
+          <li>Argon2 Password Hashing (Cryptographically secure)</li>
+          <li>Default evaluation credentials (<span class="mono">admin / admin</span>)</li>
+          <li>Agent API Key authentication (<span class="mono">Bearer Token</span>)</li>
+          <li>Configurable <span class="mono">REQUIRE_AGENT_AUTH</span> flag</li>
+        </ul>
+      </div>
+
+      <div class="comp-box">
+        <div class="comp-header">
+          <span class="comp-name">Management Routers</span>
+          <span class="comp-tag tag-cyan">REST Endpoints</span>
+        </div>
+        <ul class="comp-list">
+          <li><span class="mono">GET /api/v1/systems</span>: Live endpoint roster</li>
+          <li><span class="mono">GET /api/v1/systems/{id}</span>: Detailed metrics</li>
+          <li><span class="mono">POST /api/v1/agents/register</span>: Multi-tenant token</li>
+          <li>CORS Middleware & Anti-Caching headers</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LAYER 3: ANALYTICS & RISK ENGINE -->
+    <div class="layer-card card-risk">
+      <div class="layer-title" style="color: #c084fc;">
+        <span>🧠</span> 03. Risk Engine
+      </div>
+      <div class="layer-sub">Hybrid Heuristics + Scikit-Learn ML</div>
+
+      <div class="comp-box highlight-purple">
+        <div class="comp-header">
+          <span class="comp-name">Unsupervised ML Model</span>
+          <span class="comp-tag tag-purple">IsolationForest</span>
+        </div>
+        <div class="comp-desc">Detects anomalous insider behaviors:</div>
+        <ul class="comp-list">
+          <li>Feature vectors: Write rates, delete counts, network bursts</li>
+          <li>Learns normal developer/operator baselines</li>
+          <li>Isolates low-probability anomalous activity</li>
+          <li>Computes quantitative deviation score (0 - 100)</li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-pink">
+        <div class="comp-header">
+          <span class="comp-name">Deterministic Heuristics</span>
+          <span class="comp-tag tag-pink">Rule-Based</span>
+        </div>
+        <div class="comp-desc">Hard behavioral rule violations:</div>
+        <ul class="comp-list pink">
+          <li>USB mass exfiltration & suspicious files (.exe/.scr)</li>
+          <li>Ransomware signatures: Rapid directory wiping</li>
+          <li>Covert egress: Active commercial VPN detection</li>
+          <li>High-frequency clipboard copy looping</li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-purple">
+        <div class="comp-header">
+          <span class="comp-name">Compliance Risk Multiplier</span>
+          <span class="comp-tag tag-purple">Posture Matrix</span>
+        </div>
+        <div class="comp-desc">Applies dynamic risk penalties:</div>
+        <ul class="comp-list">
+          <li>Firewall disabled &rarr; Immediate +30 Threat Penalty</li>
+          <li>BitLocker disabled &rarr; Storage exposure modifier</li>
+          <li>Screen Lock absent &rarr; Physical security flag</li>
+          <li>Outputs Risk Level: <span class="mono">LOW | MED | HIGH | CRITICAL</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LAYER 4: DATABASE & STORAGE -->
+    <div class="layer-card card-db">
+      <div class="layer-title" style="color: #fbbf24;">
+        <span>🗄️</span> 04. Data Layer
+      </div>
+      <div class="layer-sub">SQLAlchemy 2.0 ORM + PostgreSQL / SQLite</div>
+
+      <div class="comp-box highlight-amber">
+        <div class="comp-header">
+          <span class="comp-name">Core Relational Models</span>
+          <span class="comp-tag tag-amber">Normalized</span>
+        </div>
+        <ul class="comp-list amber">
+          <li><span class="mono"><strong>organizations:</strong> id, name, enrollment_token</span></li>
+          <li><span class="mono"><strong>agents:</strong> agent_id, org_id, host, os, api_key</span></li>
+          <li><span class="mono"><strong>users:</strong> id, username, pass_hash, agent_id</span></li>
+          <li><span class="mono"><strong>login_logs:</strong> id, user_id, ip, timestamp</span></li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-amber">
+        <div class="comp-header">
+          <span class="comp-name">Telemetry & Event Logs</span>
+          <span class="comp-tag tag-amber">Time-Series</span>
+        </div>
+        <ul class="comp-list amber">
+          <li><span class="mono"><strong>events:</strong></span> raw JSON payload for all telemetry types (network, file, usb, compliance)</li>
+          <li><span class="mono"><strong>risk_logs:</strong></span> risk_score, risk_level, signals (JSON), reasons (JSON)</li>
+          <li>Indexed queries by <span class="mono">agent_id</span> and <span class="mono">created_at</span></li>
+        </ul>
+      </div>
+
+      <div class="comp-box">
+        <div class="comp-header">
+          <span class="comp-name">Database Resilience</span>
+          <span class="comp-tag tag-amber">Performance</span>
+        </div>
+        <ul class="comp-list">
+          <li>Connection pooling with <span class="mono">pool_pre_ping=True</span></li>
+          <li>Optimized bulk event commits</li>
+          <li>Cloud-ready (Neon / Supabase / AWS RDS TLS)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LAYER 5: SOC PRESENTATION -->
+    <div class="layer-card card-soc">
+      <div class="layer-title" style="color: #00f0ff;">
+        <span>💻</span> 05. Frontend SOC
+      </div>
+      <div class="layer-sub">React 18 + Vite Cyber Dashboard</div>
+
+      <div class="comp-box highlight-cyan">
+        <div class="comp-header">
+          <span class="comp-name">Cyberpunk Tactical HUD</span>
+          <span class="comp-tag tag-cyan">Real-Time UI</span>
+        </div>
+        <div class="comp-desc">SOC visual command center:</div>
+        <ul class="comp-list">
+          <li>Animated SVG Threat Gauge with dynamic risk tint</li>
+          <li>Live Network Volume Sparklines (Uplink/Downlink)</li>
+          <li>Active Process & Hardware Risk breakdowns</li>
+          <li>Auto-polling telemetry stream (5s refresh)</li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-green">
+        <div class="comp-header">
+          <span class="comp-name">CIS Compliance Matrix</span>
+          <span class="comp-tag tag-green">Enforcement View</span>
+        </div>
+        <div class="comp-desc">Live control cards with active statuses:</div>
+        <ul class="comp-list green">
+          <li>Firewall: <span class="mono">[ PASS / ENFORCED ]</span></li>
+          <li>Disk Encryption: <span class="mono">[ PASS / FAIL ]</span></li>
+          <li>Screen Lock: <span class="mono">[ PASS / ENFORCED ]</span></li>
+          <li>Antivirus: <span class="mono">[ PASS / FAIL ]</span></li>
+          <li>USB Storage: <span class="mono">[ PASS / ENFORCED ]</span></li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-cyan">
+        <div class="comp-header">
+          <span class="comp-name">Personnel Intelligence</span>
+          <span class="comp-tag tag-cyan">Modal Dossier</span>
+        </div>
+        <ul class="comp-list">
+          <li>Interactive Classified Personnel Profile modal</li>
+          <li>Employee identity mapping & department attribution</li>
+          <li>Direct correlation between human actor & endpoint agent</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Flow Ribbon (Architectural Data Pipeline) -->
+  <div class="flow-ribbon">
+    <div class="flow-step">
+      <div class="step-num">1</div>
+      <div class="step-info">
+        <h4>Endpoint Telemetry & Audit</h4>
+        <p>Sensors collect USB, File, Network & CIS Controls</p>
+      </div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-num">2</div>
+      <div class="step-info">
+        <h4>Active Self-Healing</h4>
+        <p>Enforcer applies Registry & Firewall policies</p>
+      </div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-num">3</div>
+      <div class="step-info">
+        <h4>FastAPI Ingestion</h4>
+        <p>Batched HTTPS JSON ingest & token verification</p>
+      </div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-num">4</div>
+      <div class="step-info">
+        <h4>Hybrid ML Risk Scoring</h4>
+        <p>IsolationForest + Heuristics + Compliance Multiplier</p>
+      </div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-num">5</div>
+      <div class="step-info">
+        <h4>Persistence & Storage</h4>
+        <p>Normalized entities saved via SQLAlchemy ORM</p>
+      </div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-num">6</div>
+      <div class="step-info">
+        <h4>SOC Live HUD</h4>
+        <p>React renders gauges, sparklines & CIS compliance</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

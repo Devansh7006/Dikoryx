@@ -56,7 +56,27 @@ Dikoryx couples a lightweight endpoint agent with a high-throughput FastAPI back
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Entity-Relationship (ER) Schema
+
+> 📄 **Complete Architectural Blueprint, Data Dictionary & Threat Model:** [Read the full ARCHITECTURE.md](docs/ARCHITECTURE.md)  
+> 🖼️ **Direct Asset Links:** [System Architecture Diagram (PNG)](docs/architecture.png) • [ER Schema Diagram (PNG)](docs/er_diagram.png)
+
+<div align="center">
+
+### High-Level System Architecture & Data Pipeline
+[![System Architecture](docs/architecture.png)](docs/architecture.png)
+
+<br/>
+
+### Relational Entity-Relationship (ER) Schema
+[![Entity Relationship Diagram](docs/er_diagram.png)](docs/er_diagram.png)
+
+</div>
+
+<br/>
+
+### 📐 Mermaid Interactive Architecture Diagram
+
 
 ```mermaid
 flowchart TD
@@ -291,7 +311,10 @@ dikoryx/
 │   └── package.json
 │
 ├── docs/
-│   └── screenshots/                # Showcase UI images (dashboard, agent_select, login)
+│   ├── screenshots/                # Showcase UI images (dashboard, agent_select, login)
+│   ├── architecture.png            # High-resolution System Architecture & Data Flow diagram
+│   ├── er_diagram.png              # Complete Relational ER Schema diagram
+│   └── ARCHITECTURE.md             # In-depth architectural blueprint & data dictionary
 │
 ├── .gitignore                      # Production exclusion rules
 ├── .vercelignore                   # Vercel deployment exclusions

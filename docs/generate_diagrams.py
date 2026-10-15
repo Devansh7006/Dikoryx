@@ -1,0 +1,1031 @@
+import os
+import subprocess
+from pathlib import Path
+
+# Paths
+BASE_DIR = Path(r"C:\Users\devan\OneDrive\Desktop\dikoryx")
+DOCS_DIR = BASE_DIR / "docs"
+DOCS_DIR.mkdir(parents=True, exist_ok=True)
+CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+
+# 1. ARCHITECTURE HTML
+arch_html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dikoryx - Full System Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #060911;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    padding: 30px;
+    width: 2400px;
+    height: 1400px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* Cyber Grid Background */
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .canvas {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(0, 240, 255, 0.3);
+    padding-bottom: 20px;
+    margin-bottom: 25px;
+  }
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .shield-icon {
+    font-size: 55px;
+    filter: drop-shadow(0 0 15px #00f0ff);
+  }
+  .title-text h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #00f0ff 0%, #7000ff 50%, #ff007f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title-text p {
+    font-size: 19px;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    font-weight: 500;
+    margin-top: 4px;
+  }
+  .badge-cluster {
+    display: flex;
+    gap: 12px;
+  }
+  .badge {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 15px;
+    font-family: 'Consolas', monospace;
+    color: #00f0ff;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+  }
+  .badge.purple { border-color: #a855f7; color: #c084fc; box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+  .badge.green { border-color: #10b981; color: #34d399; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+
+  /* Main Grid */
+  .grid-container {
+    display: grid;
+    grid-template-columns: 460px 480px 480px 460px 420px;
+    gap: 20px;
+    flex: 1;
+    margin-bottom: 25px;
+  }
+
+  .layer-card {
+    background: rgba(11, 19, 38, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    backdrop-filter: blur(10px);
+  }
+  .layer-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 14px 14px 0 0;
+  }
+  .card-soc::before { background: linear-gradient(90deg, #00f0ff, #3b82f6); }
+  .card-api::before { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+  .card-risk::before { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+  .card-agent::before { background: linear-gradient(90deg, #10b981, #00f0ff); }
+  .card-db::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+
+  .layer-title {
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .layer-sub {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 20px;
+    font-family: 'Consolas', monospace;
+  }
+
+  /* Components inside cards */
+  .comp-box {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
+    transition: all 0.2s;
+  }
+  .comp-box.highlight-cyan {
+    border-color: rgba(0, 240, 255, 0.4);
+    background: rgba(0, 240, 255, 0.04);
+  }
+  .comp-box.highlight-green {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.04);
+  }
+  .comp-box.highlight-pink {
+    border-color: rgba(236, 72, 153, 0.4);
+    background: rgba(236, 72, 153, 0.04);
+  }
+  .comp-box.highlight-purple {
+    border-color: rgba(168, 85, 247, 0.4);
+    background: rgba(168, 85, 247, 0.04);
+  }
+  .comp-box.highlight-amber {
+    border-color: rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.04);
+  }
+
+  .comp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .comp-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f1f5f9;
+  }
+  .comp-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-weight: 600;
+  }
+  .tag-cyan { background: rgba(0, 240, 255, 0.15); color: #00f0ff; }
+  .tag-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+  .tag-pink { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
+  .tag-purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+  .tag-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+  .comp-desc {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+  .comp-list {
+    margin-top: 8px;
+    list-style: none;
+  }
+  .comp-list li {
+    font-size: 12.5px;
+    color: #cbd5e1;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .comp-list li::before {
+    content: '▹';
+    color: #00f0ff;
+    font-size: 14px;
+  }
+  .comp-list.green li::before { color: #10b981; }
+  .comp-list.pink li::before { color: #ec4899; }
+  .comp-list.amber li::before { color: #f59e0b; }
+
+  /* Flow Ribbon at Bottom */
+  .flow-ribbon {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 12px;
+    padding: 18px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.08);
+  }
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .step-num {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(0, 240, 255, 0.15);
+    border: 1px solid #00f0ff;
+    color: #00f0ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    font-weight: 800;
+    font-family: 'Consolas', monospace;
+  }
+  .step-info h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+  .step-info p {
+    font-size: 12.5px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+  .flow-arrow {
+    color: #38bdf8;
+    font-size: 26px;
+    font-weight: 300;
+  }
+
+  .mono { font-family: 'Consolas', monospace; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="title-group">
+      <div class="shield-icon">🛡️</div>
+      <div class="title-text">
+        <h1>DIKORYX — SYSTEM ARCHITECTURE & DATA FLOW</h1>
+        <p>Next-Gen Behavioral Insider Threat Detection, Real-Time Telemetry & Automated CIS Compliance Engine</p>
+      </div>
+    </div>
+    <div class="badge-cluster">
+      <div class="badge">Zero-Trust Architecture</div>
+      <div class="badge green">CIS Benchmark v8 Enforced</div>
+      <div class="badge purple">Hybrid ML (IsolationForest)</div>
+      <div class="badge">FastAPI + React 18</div>
+    </div>
+  </div>
+
+  <!-- Grid Layers -->
+  <div class="grid-container">
+
+    <!-- LAYER 1: ENDPOINT AGENT -->
+    <div class="layer-card card-agent">
+      <div class="layer-title" style="color: #34d399;">
+        <span>🖥️</span> 01. Endpoint Daemon
+      </div>
+      <div class="layer-sub">Python 3.11+ Background Service</div>
+
+      <div class="comp-box highlight-green">
+        <div class="comp-header">
+          <span class="comp-name">CIS Compliance Auditor</span>
+          <span class="comp-tag tag-green">CIS v8</span>
+        </div>
+        <div class="comp-desc">Continuous audit of endpoint security controls:</div>
+        <ul class="comp-list green">
+          <li>Windows Defender Firewall (All Profiles)</li>
+          <li>BitLocker Disk Encryption (Protection On)</li>
+          <li>Screen Lock Policy (&le;300s + Password Secure)</li>
+          <li>Windows Defender Antivirus (AMService)</li>
+          <li>USB Storage Policy (USBSTOR lockdown)</li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-green">
+        <div class="comp-header">
+          <span class="comp-name">Auto-Policy Enforcer</span>
+          <span class="comp-tag tag-green">Self-Healing</span>
+        </div>
+        <div class="comp-desc">Remediates configuration drift automatically:</div>
+        <ul class="comp-list green">
+          <li><span class="mono">netsh advfirewall set allprofiles</span> state on</li>
+          <li>Registry enforcement: <span class="mono">ScreenSaveActive=1</span></li>
+          <li>Registry lockdown: <span class="mono">USBSTOR Start=4</span></li>
+          <li>Tags remediation in <span class="mono">COMPLIANCE_STATUS</span></li>
+        </ul>
+      </div>
+
+      <div class="comp-box">
+        <div class="comp-header">
+          <span class="comp-name">Telemetry Collectors</span>
+          <span class="comp-tag tag-cyan">Sensors</span>
+        </div>
+        <ul class="comp-list">
+          <li><strong>File Ops:</strong> Directory watcher for mass writes/deletions</li>
+          <li><strong>USB Monitor:</strong> Insertion events & file signature scans</li>
+          <li><strong>Network Bandwidth:</strong> <span class="mono">psutil</span> Tx/Rx byte telemetry</li>
+          <li><strong>VPN/Proxy Detection:</strong> Public IP & ASN analysis</li>
+          <li><strong>Process & Clipboard:</strong> Churn & data hooks</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LAYER 2: API GATEWAY -->
+    <div class="layer-card card-api">
+      <div class="layer-title" style="color: #38bdf8;">
+        <span>⚙️</span> 02. API Gateway
+      </div>
+      <div class="layer-sub">FastAPI + Uvicorn ASGI Engine</div>
+
+      <div class="comp-box highlight-cyan">
+        <div class="comp-header">
+          <span class="comp-name">Ingestion & Telemetry API</span>
+          <span class="comp-tag tag-cyan">High-Throughput</span>
+        </div>
+        <div class="comp-desc">Batch ingestion endpoints:</div>
+        <ul class="comp-list">
+          <li><span class="mono">POST /api/v1/telemetry</span>: Batched event stream</li>
+          <li><span class="mono">POST /api/v1/compliance</span>: Control status events</li>
+          <li>Low-latency async handling via thread pool</li>
+          <li>JSON Schema validation via Pydantic models</li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-cyan">
+        <div class="comp-header">
+          <span class="comp-name">Identity & Access Guard</span>
+          <span class="comp-tag tag-cyan">Security</span>
+        </div>
+        <div class="comp-desc">Authentication services:</div>
+        <ul class="comp-list">
+          <li>Argon2 Password Hashing (Cryptographically secure)</li>
+          <li>Default evaluation credentials (<span class="mono">admin / admin</span>)</li>
+          <li>Agent API Key authentication (<span class="mono">Bearer Token</span>)</li>
+          <li>Configurable <span class="mono">REQUIRE_AGENT_AUTH</span> flag</li>
+        </ul>
+      </div>
+
+      <div class="comp-box">
+        <div class="comp-header">
+          <span class="comp-name">Management Routers</span>
+          <span class="comp-tag tag-cyan">REST Endpoints</span>
+        </div>
+        <ul class="comp-list">
+          <li><span class="mono">GET /api/v1/systems</span>: Live endpoint roster</li>
+          <li><span class="mono">GET /api/v1/systems/{id}</span>: Detailed metrics</li>
+          <li><span class="mono">POST /api/v1/agents/register</span>: Multi-tenant token</li>
+          <li>CORS Middleware & Anti-Caching headers</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LAYER 3: ANALYTICS & RISK ENGINE -->
+    <div class="layer-card card-risk">
+      <div class="layer-title" style="color: #c084fc;">
+        <span>🧠</span> 03. Risk Engine
+      </div>
+      <div class="layer-sub">Hybrid Heuristics + Scikit-Learn ML</div>
+
+      <div class="comp-box highlight-purple">
+        <div class="comp-header">
+          <span class="comp-name">Unsupervised ML Model</span>
+          <span class="comp-tag tag-purple">IsolationForest</span>
+        </div>
+        <div class="comp-desc">Detects anomalous insider behaviors:</div>
+        <ul class="comp-list">
+          <li>Feature vectors: Write rates, delete counts, network bursts</li>
+          <li>Learns normal developer/operator baselines</li>
+          <li>Isolates low-probability anomalous activity</li>
+          <li>Computes quantitative deviation score (0 - 100)</li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-pink">
+        <div class="comp-header">
+          <span class="comp-name">Deterministic Heuristics</span>
+          <span class="comp-tag tag-pink">Rule-Based</span>
+        </div>
+        <div class="comp-desc">Hard behavioral rule violations:</div>
+        <ul class="comp-list pink">
+          <li>USB mass exfiltration & suspicious files (.exe/.scr)</li>
+          <li>Ransomware signatures: Rapid directory wiping</li>
+          <li>Covert egress: Active commercial VPN detection</li>
+          <li>High-frequency clipboard copy looping</li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-purple">
+        <div class="comp-header">
+          <span class="comp-name">Compliance Risk Multiplier</span>
+          <span class="comp-tag tag-purple">Posture Matrix</span>
+        </div>
+        <div class="comp-desc">Applies dynamic risk penalties:</div>
+        <ul class="comp-list">
+          <li>Firewall disabled &rarr; Immediate +30 Threat Penalty</li>
+          <li>BitLocker disabled &rarr; Storage exposure modifier</li>
+          <li>Screen Lock absent &rarr; Physical security flag</li>
+          <li>Outputs Risk Level: <span class="mono">LOW | MED | HIGH | CRITICAL</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LAYER 4: DATABASE & STORAGE -->
+    <div class="layer-card card-db">
+      <div class="layer-title" style="color: #fbbf24;">
+        <span>🗄️</span> 04. Data Layer
+      </div>
+      <div class="layer-sub">SQLAlchemy 2.0 ORM + PostgreSQL / SQLite</div>
+
+      <div class="comp-box highlight-amber">
+        <div class="comp-header">
+          <span class="comp-name">Core Relational Models</span>
+          <span class="comp-tag tag-amber">Normalized</span>
+        </div>
+        <ul class="comp-list amber">
+          <li><span class="mono"><strong>organizations:</strong> id, name, enrollment_token</span></li>
+          <li><span class="mono"><strong>agents:</strong> agent_id, org_id, host, os, api_key</span></li>
+          <li><span class="mono"><strong>users:</strong> id, username, pass_hash, agent_id</span></li>
+          <li><span class="mono"><strong>login_logs:</strong> id, user_id, ip, timestamp</span></li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-amber">
+        <div class="comp-header">
+          <span class="comp-name">Telemetry & Event Logs</span>
+          <span class="comp-tag tag-amber">Time-Series</span>
+        </div>
+        <ul class="comp-list amber">
+          <li><span class="mono"><strong>events:</strong></span> raw JSON payload for all telemetry types (network, file, usb, compliance)</li>
+          <li><span class="mono"><strong>risk_logs:</strong></span> risk_score, risk_level, signals (JSON), reasons (JSON)</li>
+          <li>Indexed queries by <span class="mono">agent_id</span> and <span class="mono">created_at</span></li>
+        </ul>
+      </div>
+
+      <div class="comp-box">
+        <div class="comp-header">
+          <span class="comp-name">Database Resilience</span>
+          <span class="comp-tag tag-amber">Performance</span>
+        </div>
+        <ul class="comp-list">
+          <li>Connection pooling with <span class="mono">pool_pre_ping=True</span></li>
+          <li>Optimized bulk event commits</li>
+          <li>Cloud-ready (Neon / Supabase / AWS RDS TLS)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LAYER 5: SOC PRESENTATION -->
+    <div class="layer-card card-soc">
+      <div class="layer-title" style="color: #00f0ff;">
+        <span>💻</span> 05. Frontend SOC
+      </div>
+      <div class="layer-sub">React 18 + Vite Cyber Dashboard</div>
+
+      <div class="comp-box highlight-cyan">
+        <div class="comp-header">
+          <span class="comp-name">Cyberpunk Tactical HUD</span>
+          <span class="comp-tag tag-cyan">Real-Time UI</span>
+        </div>
+        <div class="comp-desc">SOC visual command center:</div>
+        <ul class="comp-list">
+          <li>Animated SVG Threat Gauge with dynamic risk tint</li>
+          <li>Live Network Volume Sparklines (Uplink/Downlink)</li>
+          <li>Active Process & Hardware Risk breakdowns</li>
+          <li>Auto-polling telemetry stream (5s refresh)</li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-green">
+        <div class="comp-header">
+          <span class="comp-name">CIS Compliance Matrix</span>
+          <span class="comp-tag tag-green">Enforcement View</span>
+        </div>
+        <div class="comp-desc">Live control cards with active statuses:</div>
+        <ul class="comp-list green">
+          <li>Firewall: <span class="mono">[ PASS / ENFORCED ]</span></li>
+          <li>Disk Encryption: <span class="mono">[ PASS / FAIL ]</span></li>
+          <li>Screen Lock: <span class="mono">[ PASS / ENFORCED ]</span></li>
+          <li>Antivirus: <span class="mono">[ PASS / FAIL ]</span></li>
+          <li>USB Storage: <span class="mono">[ PASS / ENFORCED ]</span></li>
+        </ul>
+      </div>
+
+      <div class="comp-box highlight-cyan">
+        <div class="comp-header">
+          <span class="comp-name">Personnel Intelligence</span>
+          <span class="comp-tag tag-cyan">Modal Dossier</span>
+        </div>
+        <ul class="comp-list">
+          <li>Interactive Classified Personnel Profile modal</li>
+          <li>Employee identity mapping & department attribution</li>
+          <li>Direct correlation between human actor & endpoint agent</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Flow Ribbon (Architectural Data Pipeline) -->
+  <div class="flow-ribbon">
+    <div class="flow-step">
+      <div class="step-num">1</div>
+      <div class="step-info">
+        <h4>Endpoint Telemetry & Audit</h4>
+        <p>Sensors collect USB, File, Network & CIS Controls</p>
+      </div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-num">2</div>
+      <div class="step-info">
+        <h4>Active Self-Healing</h4>
+        <p>Enforcer applies Registry & Firewall policies</p>
+      </div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-num">3</div>
+      <div class="step-info">
+        <h4>FastAPI Ingestion</h4>
+        <p>Batched HTTPS JSON ingest & token verification</p>
+      </div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-num">4</div>
+      <div class="step-info">
+        <h4>Hybrid ML Risk Scoring</h4>
+        <p>IsolationForest + Heuristics + Compliance Multiplier</p>
+      </div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-num">5</div>
+      <div class="step-info">
+        <h4>Persistence & Storage</h4>
+        <p>Normalized entities saved via SQLAlchemy ORM</p>
+      </div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      <div class="step-num">6</div>
+      <div class="step-info">
+        <h4>SOC Live HUD</h4>
+        <p>React renders gauges, sparklines & CIS compliance</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
+"""
+
+# 2. ER DIAGRAM HTML
+er_html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dikoryx - Entity Relationship (ER) Diagram</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #060911;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    padding: 30px;
+    width: 2200px;
+    height: 1400px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      linear-gradient(rgba(168, 85, 247, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168, 85, 247, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .canvas {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(168, 85, 247, 0.3);
+    padding-bottom: 20px;
+    margin-bottom: 25px;
+  }
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .db-icon {
+    font-size: 55px;
+    filter: drop-shadow(0 0 15px #a855f7);
+  }
+  .title-text h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #a855f7 0%, #3b82f6 50%, #00f0ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title-text p {
+    font-size: 19px;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    font-weight: 500;
+    margin-top: 4px;
+  }
+  .badge-cluster {
+    display: flex;
+    gap: 12px;
+  }
+  .badge {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 15px;
+    font-family: 'Consolas', monospace;
+    color: #c084fc;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+  }
+  .badge.cyan { border-color: #00f0ff; color: #00f0ff; }
+  .badge.green { border-color: #10b981; color: #34d399; }
+
+  /* ER Layout Grid */
+  .er-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr 1fr;
+    gap: 30px;
+    flex: 1;
+    margin-bottom: 25px;
+  }
+
+  .entity-card {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(8px);
+  }
+
+  .entity-header {
+    padding: 16px 20px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .header-org { background: linear-gradient(90deg, rgba(245, 158, 11, 0.2), transparent); border-top: 4px solid #f59e0b; color: #fbbf24; }
+  .header-agent { background: linear-gradient(90deg, rgba(16, 185, 129, 0.2), transparent); border-top: 4px solid #10b981; color: #34d399; }
+  .header-user { background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), transparent); border-top: 4px solid #3b82f6; color: #60a5fa; }
+  .header-login { background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), transparent); border-top: 4px solid #6366f1; color: #818cf8; }
+  .header-event { background: linear-gradient(90deg, rgba(236, 72, 153, 0.2), transparent); border-top: 4px solid #ec4899; color: #f472b6; }
+  .header-risk { background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), transparent); border-top: 4px solid #ef4444; color: #f87171; }
+
+  .entity-tag {
+    font-size: 11px;
+    font-family: 'Consolas', monospace;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Table Fields */
+  .field-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    flex: 1;
+  }
+  .field-table th {
+    text-align: left;
+    padding: 10px 18px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #64748b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.2);
+    font-weight: 600;
+  }
+  .field-table td {
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: #cbd5e1;
+    font-size: 13.5px;
+  }
+  .field-table tr:last-child td {
+    border-bottom: none;
+  }
+  .field-name {
+    font-weight: 600;
+    font-family: 'Consolas', monospace;
+  }
+  .field-type {
+    color: #a855f7;
+    font-family: 'Consolas', monospace;
+    font-size: 12.5px;
+  }
+  .field-constraint {
+    font-family: 'Consolas', monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  .pk { color: #f59e0b; background: rgba(245, 158, 11, 0.15); padding: 2px 6px; border-radius: 3px; }
+  .fk { color: #00f0ff; background: rgba(0, 240, 255, 0.15); padding: 2px 6px; border-radius: 3px; }
+  .uq { color: #10b981; background: rgba(16, 185, 129, 0.15); padding: 2px 6px; border-radius: 3px; }
+  .idx { color: #94a3b8; }
+
+  /* Relationships Bar */
+  .rel-bar {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 12px;
+    padding: 18px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  }
+  .rel-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14.5px;
+  }
+  .rel-badge {
+    background: rgba(168, 85, 247, 0.15);
+    border: 1px solid #a855f7;
+    color: #c084fc;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+  .rel-text {
+    color: #cbd5e1;
+  }
+  .rel-text strong {
+    color: #f1f5f9;
+    font-family: 'Consolas', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="title-group">
+      <div class="db-icon">🗄️</div>
+      <div class="title-text">
+        <h1>DIKORYX — RELATIONAL ENTITY RELATIONSHIP (ER) SCHEMA</h1>
+        <p>Complete Database Schema Specification • SQLAlchemy 2.0 ORM • PostgreSQL / SQLite Production Mapping</p>
+      </div>
+    </div>
+    <div class="badge-cluster">
+      <div class="badge">Relational Integrity (3NF)</div>
+      <div class="badge cyan">JSON Column Extensions</div>
+      <div class="badge green">Foreign Key Cascades</div>
+    </div>
+  </div>
+
+  <!-- ER Grid -->
+  <div class="er-grid">
+
+    <!-- 1. ORGANIZATIONS -->
+    <div class="entity-card">
+      <div class="entity-header header-org">
+        <span>🏢 organizations</span>
+        <span class="entity-tag">TENANT ROOT</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr><th>Column</th><th>Type</th><th>Constraint</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="field-name">id</td><td class="field-type">INTEGER</td><td><span class="field-constraint pk">PK</span> <span class="field-constraint idx">INDEX</span></td><td>Surrogate primary key</td></tr>
+          <tr><td class="field-name">name</td><td class="field-type">TEXT</td><td><span class="field-constraint">NOT NULL</span></td><td>Enterprise or organization name</td></tr>
+          <tr><td class="field-name">enrollment_token</td><td class="field-type">TEXT</td><td><span class="field-constraint uq">UNIQUE</span> <span class="field-constraint idx">INDEX</span></td><td>Cryptographic onboarding token</td></tr>
+          <tr><td class="field-name">created_at</td><td class="field-type">TIMESTAMP</td><td>DEFAULT utcnow</td><td>Record creation timestamp</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. AGENTS -->
+    <div class="entity-card">
+      <div class="entity-header header-agent">
+        <span>🖥️ agents</span>
+        <span class="entity-tag">HOST RUNTIME</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr><th>Column</th><th>Type</th><th>Constraint</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="field-name">agent_id</td><td class="field-type">TEXT</td><td><span class="field-constraint pk">PK</span></td><td>Unique UUID agent identifier</td></tr>
+          <tr><td class="field-name">organization_id</td><td class="field-type">INTEGER</td><td><span class="field-constraint fk">FK</span> <span class="field-constraint idx">INDEX</span></td><td>&rarr; organizations.id</td></tr>
+          <tr><td class="field-name">hostname</td><td class="field-type">TEXT</td><td>NULLABLE</td><td>Endpoint workstation hostname</td></tr>
+          <tr><td class="field-name">os</td><td class="field-type">TEXT</td><td>NULLABLE</td><td>Operating system & version</td></tr>
+          <tr><td class="field-name">last_seen</td><td class="field-type">TIMESTAMP</td><td>NULLABLE</td><td>Last received heartbeat timestamp</td></tr>
+          <tr><td class="field-name">api_key</td><td class="field-type">TEXT</td><td><span class="field-constraint uq">UNIQUE</span> <span class="field-constraint idx">INDEX</span></td><td>Per-agent Bearer auth credential</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. USERS -->
+    <div class="entity-card">
+      <div class="entity-header header-user">
+        <span>👤 users</span>
+        <span class="entity-tag">SECURITY PERSONNEL</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr><th>Column</th><th>Type</th><th>Constraint</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="field-name">id</td><td class="field-type">INTEGER</td><td><span class="field-constraint pk">PK</span> <span class="field-constraint idx">INDEX</span></td><td>Surrogate user ID</td></tr>
+          <tr><td class="field-name">username</td><td class="field-type">TEXT</td><td><span class="field-constraint uq">UNIQUE</span> <span class="field-constraint idx">INDEX</span></td><td>Unique login handle</td></tr>
+          <tr><td class="field-name">password_hash</td><td class="field-type">TEXT</td><td>NOT NULL</td><td>Argon2 cryptographic password hash</td></tr>
+          <tr><td class="field-name">name</td><td class="field-type">TEXT</td><td>NULLABLE</td><td>Employee full legal name</td></tr>
+          <tr><td class="field-name">email</td><td class="field-type">TEXT</td><td>NULLABLE</td><td>Corporate email address</td></tr>
+          <tr><td class="field-name">department</td><td class="field-type">TEXT</td><td>NULLABLE</td><td>e.g. Engineering, Finance, Ops</td></tr>
+          <tr><td class="field-name">photo_url</td><td class="field-type">TEXT</td><td>NULLABLE</td><td>Dossier profile avatar image link</td></tr>
+          <tr><td class="field-name">agent_id</td><td class="field-type">TEXT</td><td><span class="field-constraint uq">UNIQUE</span></td><td>Direct link to monitored endpoint</td></tr>
+          <tr><td class="field-name">created_at</td><td class="field-type">TIMESTAMP</td><td>DEFAULT utcnow</td><td>User registration timestamp</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. LOGIN_LOGS -->
+    <div class="entity-card">
+      <div class="entity-header header-login">
+        <span>🔐 login_logs</span>
+        <span class="entity-tag">AUTH AUDIT</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr><th>Column</th><th>Type</th><th>Constraint</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="field-name">id</td><td class="field-type">INTEGER</td><td><span class="field-constraint pk">PK</span> <span class="field-constraint idx">INDEX</span></td><td>Log entry ID</td></tr>
+          <tr><td class="field-name">user_id</td><td class="field-type">INTEGER</td><td><span class="field-constraint fk">FK-REF</span></td><td>Associated users.id</td></tr>
+          <tr><td class="field-name">username</td><td class="field-type">TEXT</td><td>NOT NULL</td><td>Username attempted</td></tr>
+          <tr><td class="field-name">login_time</td><td class="field-type">TIMESTAMP</td><td>DEFAULT utcnow</td><td>Timestamp of authentication event</td></tr>
+          <tr><td class="field-name">ip_address</td><td class="field-type">TEXT</td><td>NULLABLE</td><td>Client IPv4 / IPv6 address</td></tr>
+          <tr><td class="field-name">user_agent</td><td class="field-type">TEXT</td><td>NULLABLE</td><td>Client browser / user-agent string</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5. EVENTS -->
+    <div class="entity-card">
+      <div class="entity-header header-event">
+        <span>⚡ events</span>
+        <span class="entity-tag">TELEMETRY STREAM</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr><th>Column</th><th>Type</th><th>Constraint</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="field-name">id</td><td class="field-type">INTEGER</td><td><span class="field-constraint pk">PK</span> <span class="field-constraint idx">INDEX</span></td><td>Telemetry record ID</td></tr>
+          <tr><td class="field-name">agent_id</td><td class="field-type">TEXT</td><td><span class="field-constraint fk">FK-REF</span> <span class="field-constraint idx">INDEX</span></td><td>Originating endpoint agent_id</td></tr>
+          <tr><td class="field-name">event_type</td><td class="field-type">TEXT</td><td><span class="field-constraint idx">INDEX</span></td><td>COMPLIANCE_STATUS, NETWORK, etc.</td></tr>
+          <tr><td class="field-name">data</td><td class="field-type">JSON</td><td>NOT NULL</td><td>Arbitrary structured telemetry payload</td></tr>
+          <tr><td class="field-name">created_at</td><td class="field-type">TIMESTAMP</td><td>DEFAULT utcnow</td><td>Server ingestion timestamp</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 6. RISK_LOGS -->
+    <div class="entity-card">
+      <div class="entity-header header-risk">
+        <span>🚨 risk_logs</span>
+        <span class="entity-tag">ML INFERENCE</span>
+      </div>
+      <table class="field-table">
+        <thead>
+          <tr><th>Column</th><th>Type</th><th>Constraint</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="field-name">id</td><td class="field-type">INTEGER</td><td><span class="field-constraint pk">PK</span> <span class="field-constraint idx">INDEX</span></td><td>Inference record ID</td></tr>
+          <tr><td class="field-name">agent_id</td><td class="field-type">TEXT</td><td><span class="field-constraint fk">FK-REF</span> <span class="field-constraint idx">INDEX</span></td><td>Evaluated agent identifier</td></tr>
+          <tr><td class="field-name">risk_score</td><td class="field-type">INTEGER</td><td>NOT NULL</td><td>Calculated threat rating (0 - 100)</td></tr>
+          <tr><td class="field-name">risk_level</td><td class="field-type">TEXT</td><td>NOT NULL</td><td>LOW | MEDIUM | HIGH | CRITICAL</td></tr>
+          <tr><td class="field-name">reasons</td><td class="field-type">JSON</td><td>NOT NULL</td><td>Array of human-readable trigger causes</td></tr>
+          <tr><td class="field-name">signals</td><td class="field-type">JSON</td><td>NOT NULL</td><td>Telemetry features consumed by ML model</td></tr>
+          <tr><td class="field-name">created_at</td><td class="field-type">TIMESTAMP</td><td>DEFAULT utcnow</td><td>Evaluation timestamp</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Relationships Bar -->
+  <div class="rel-bar">
+    <div class="rel-item">
+      <span class="rel-badge">1 : N</span>
+      <span class="rel-text"><strong>organizations.id</strong> &rarr; <strong>agents.organization_id</strong> (Tenant Partitioning)</span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-badge">1 : N</span>
+      <span class="rel-text"><strong>agents.agent_id</strong> &rarr; <strong>events.agent_id</strong> (Telemetry Ingestion Stream)</span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-badge">1 : N</span>
+      <span class="rel-text"><strong>agents.agent_id</strong> &rarr; <strong>risk_logs.agent_id</strong> (Historical Threat Records)</span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-badge">1 : 1</span>
+      <span class="rel-text"><strong>users.agent_id</strong> &harr; <strong>agents.agent_id</strong> (Personnel Endpoint Attribution)</span>
+    </div>
+    <div class="rel-item">
+      <span class="rel-badge">1 : N</span>
+      <span class="rel-text"><strong>users.id</strong> &rarr; <strong>login_logs.user_id</strong> (SOC Access Audit Trail)</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
+"""
+
+# Write HTML files
+scratch_dir = BASE_DIR / "docs" / "diagram_templates"
+scratch_dir.mkdir(parents=True, exist_ok=True)
+
+arch_file = scratch_dir / "architecture.html"
+er_file = scratch_dir / "er_diagram.html"
+
+arch_file.write_text(arch_html, encoding="utf-8")
+er_file.write_text(er_html, encoding="utf-8")
+print(f"Wrote {arch_file} and {er_file}")
+
+# Render using Chrome Headless
+arch_png = DOCS_DIR / "architecture.png"
+er_png = DOCS_DIR / "er_diagram.png"
+
+def render(html_path, out_png, width=2400, height=1400):
+    cmd = [
+        CHROME_PATH,
+        "--headless=new",
+        "--disable-gpu",
+        "--hide-scrollbars",
+        f"--window-size={width},{height}",
+        f"--screenshot={out_png}",
+        html_path.as_uri()
+    ]
+    print(f"Rendering {out_png}...")
+    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print(f"Render result: {res.returncode}, exists: {out_png.exists()}, size: {out_png.stat().st_size if out_png.exists() else 0}")
+
+render(arch_file, arch_png, 2400, 1400)
+render(er_file, er_png, 2200, 1400)
