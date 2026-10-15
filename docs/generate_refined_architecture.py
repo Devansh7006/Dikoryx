@@ -1,0 +1,395 @@
+import subprocess
+from pathlib import Path
+
+BASE_DIR = Path(r"C:\Users\devan\OneDrive\Desktop\dikoryx")
+DOCS_DIR = BASE_DIR / "docs"
+CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+
+diagram_html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dikoryx Architecture Diagram</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  svg {
+    background: #ffffff;
+    border-radius: 4px;
+  }
+  
+  /* Text Styles */
+  .actor-title { font-size: 15px; font-weight: 600; fill: #1e3a8a; text-anchor: middle; }
+  .box-title { font-size: 14.5px; font-weight: 600; text-anchor: middle; }
+  .box-file { font-size: 12.5px; font-family: 'Consolas', 'Courier New', monospace; font-weight: 500; text-anchor: middle; opacity: 0.85; }
+  .subsystem-title { font-size: 15px; font-weight: 700; fill: #475569; letter-spacing: 0.5px; }
+  .edge-label { font-size: 11.5px; fill: #475569; font-weight: 500; text-anchor: middle; }
+  .edge-pill { fill: #ffffff; stroke: #e2e8f0; rx: 4px; ry: 4px; }
+  
+  /* Arrows */
+  .arrow { stroke: #64748b; stroke-width: 1.5; fill: none; }
+  .arrow-dashed { stroke: #64748b; stroke-width: 1.5; stroke-dasharray: 4,4; fill: none; }
+</style>
+</head>
+<body>
+
+<svg width="1500" height="1820" viewBox="0 0 1500 1820" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Arrow marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#64748b" />
+    </marker>
+    <!-- Box Shadow -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <!-- ================= TOP: ACTORS ================= -->
+  <!-- Security Analyst -->
+  <g transform="translate(1200, 30)">
+    <circle cx="65" cy="45" r="42" fill="#eff6ff" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+    <text x="65" y="42" class="actor-title">Security</text>
+    <text x="65" y="58" class="actor-title">analyst</text>
+  </g>
+
+  <!-- uses arrow -->
+  <path d="M 1265 117 L 1265 158" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="1245" y="130" width="40" height="18" class="edge-pill"/>
+  <text x="1265" y="143" class="edge-label">uses</text>
+
+  <!-- Web Browser -->
+  <g transform="translate(1200, 165)">
+    <circle cx="65" cy="45" r="42" fill="#eff6ff" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+    <text x="65" y="42" class="actor-title">Web</text>
+    <text x="65" y="58" class="actor-title">browser</text>
+  </g>
+
+  <!-- opens arrow -->
+  <path d="M 1265 255 L 1265 335" class="arrow-dashed" marker-end="url(#arrow)"/>
+  <rect x="1242" y="285" width="46" height="18" class="edge-pill"/>
+  <text x="1265" y="298" class="edge-label">opens</text>
+
+
+  <!-- ================= 1. SUBSYSTEM: SOC DASHBOARD ================= -->
+  <rect x="740" y="340" width="710" height="490" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="765" y="372" class="subsystem-title">SOC dashboard</text>
+
+  <!-- App.jsx -->
+  <g transform="translate(1140, 380)">
+    <rect width="250" height="58" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="125" y="27" class="box-title" fill="#15803d">Application and login</text>
+    <text x="125" y="45" class="box-file" fill="#166534">[App.jsx]</text>
+  </g>
+
+  <!-- App.jsx -> Dashboard.jsx (renders) -->
+  <path d="M 1265 438 L 1265 498" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="1237" y="460" width="56" height="18" class="edge-pill"/>
+  <text x="1265" y="473" class="edge-label">renders</text>
+
+  <!-- Dashboard.jsx -->
+  <g transform="translate(1140, 505)">
+    <rect width="250" height="58" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="125" y="27" class="box-title" fill="#15803d">Dashboard shell</text>
+    <text x="125" y="45" class="box-file" fill="#166534">[Dashboard.jsx]</text>
+  </g>
+
+  <!-- Dashboard.jsx -> SystemDetails.jsx (renders) -->
+  <path d="M 1200 563 L 1200 600 L 925 600 L 925 638" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="1037" y="591" width="56" height="18" class="edge-pill"/>
+  <text x="1065" y="604" class="edge-label">renders</text>
+
+  <!-- Dashboard.jsx -> SystemList.jsx (renders) -->
+  <path d="M 1330 563 L 1330 600 L 1350 600 L 1350 638" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="1312" y="591" width="56" height="18" class="edge-pill"/>
+  <text x="1340" y="604" class="edge-label">renders</text>
+
+  <!-- SystemDetails.jsx -->
+  <g transform="translate(800, 645)">
+    <rect width="250" height="58" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="125" y="27" class="box-title" fill="#15803d">Endpoint details</text>
+    <text x="125" y="45" class="box-file" fill="#166534">[SystemDetails.jsx]</text>
+  </g>
+
+  <!-- SystemList.jsx -->
+  <g transform="translate(1225, 645)">
+    <rect width="200" height="58" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="100" y="27" class="box-title" fill="#15803d">Endpoint selection</text>
+    <text x="100" y="45" class="box-file" fill="#166534">[SystemList.jsx]</text>
+  </g>
+
+  <!-- AgentCharts.jsx -->
+  <g transform="translate(775, 765)">
+    <rect width="200" height="54" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="100" y="25" class="box-title" fill="#15803d">Telemetry charts</text>
+    <text x="100" y="42" class="box-file" fill="#166534">[AgentCharts.jsx]</text>
+  </g>
+
+  <!-- Frontend api.js -->
+  <g transform="translate(1040, 765)">
+    <rect width="220" height="54" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="110" y="25" class="box-title" fill="#15803d">Frontend API client</text>
+    <text x="110" y="42" class="box-file" fill="#166534">[api.js]</text>
+  </g>
+
+  <!-- SystemDetails.jsx -> AgentCharts.jsx (displays telemetry) -->
+  <path d="M 875 703 L 875 758" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="815" y="723" width="120" height="18" class="edge-pill"/>
+  <text x="875" y="736" class="edge-label">displays telemetry</text>
+
+  <!-- SystemDetails.jsx -> api.js (fetches details) -->
+  <path d="M 975 703 L 975 725 L 1100 725 L 1100 758" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="990" y="716" width="95" height="18" class="edge-pill"/>
+  <text x="1037" y="729" class="edge-label">fetches details</text>
+
+  <!-- SystemList.jsx -> api.js (loads data) -->
+  <path d="M 1280 703 L 1280 730 L 1200 730 L 1200 758" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="1205" y="721" width="75" height="18" class="edge-pill"/>
+  <text x="1242" y="734" class="edge-label">loads data</text>
+
+  <!-- App.jsx -> api.js (requests agents) -->
+  <path d="M 1390 410 L 1435 410 L 1435 792 L 1268 792" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="1380" y="540" width="100" height="18" class="edge-pill"/>
+  <text x="1430" y="553" class="edge-label">requests agents</text>
+
+
+  <!-- ================= 2. SUBSYSTEM: ENDPOINT AGENT ================= -->
+  <rect x="50" y="380" width="650" height="470" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="75" y="412" class="subsystem-title">Endpoint agent</text>
+
+  <!-- compliance.py -->
+  <g transform="translate(240, 435)">
+    <rect width="270" height="58" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="135" y="27" class="box-title" fill="#1e40af">CIS audit and enforcement</text>
+    <text x="135" y="45" class="box-file" fill="#1d4ed8">[compliance.py]</text>
+  </g>
+
+  <!-- compliance.py -> agent.py (reports enforcement) -->
+  <path d="M 375 493 L 375 553" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="305" y="515" width="140" height="18" class="edge-pill"/>
+  <text x="375" y="528" class="edge-label">reports enforcement</text>
+
+  <!-- agent.py -->
+  <g transform="translate(260, 560)">
+    <rect width="230" height="58" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="115" y="27" class="box-title" fill="#1e40af">Agent orchestrator</text>
+    <text x="115" y="45" class="box-file" fill="#1d4ed8">[agent.py]</text>
+  </g>
+
+  <!-- agent.py -> usb_monitor.py (starts monitor) -->
+  <path d="M 300 618 L 300 650 L 165 650 L 165 683" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="180" y="641" width="90" height="18" class="edge-pill"/>
+  <text x="225" y="654" class="edge-label">starts monitor</text>
+
+  <!-- agent.py -> Behavior collectors (collects telemetry) -->
+  <path d="M 375 618 L 375 683" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="315" y="641" width="120" height="18" class="edge-pill"/>
+  <text x="375" y="654" class="edge-label">collects telemetry</text>
+
+  <!-- agent.py -> http_client.py (sends telemetry) -->
+  <path d="M 450 618 L 450 650 L 575 650 L 575 683" class="arrow-dashed" marker-end="url(#arrow)"/>
+  <rect x="475" y="641" width="105" height="18" class="edge-pill"/>
+  <text x="527" y="654" class="edge-label">sends telemetry</text>
+
+  <!-- usb_monitor.py -->
+  <g transform="translate(75, 690)">
+    <rect width="180" height="54" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="90" y="25" class="box-title" fill="#1e40af">USB monitoring</text>
+    <text x="90" y="42" class="box-file" fill="#1d4ed8">[usb_monitor.py]</text>
+  </g>
+
+  <!-- Behavior collectors -->
+  <g transform="translate(285, 690)">
+    <rect width="180" height="54" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="90" y="32" class="box-title" fill="#1e40af">Behavior collectors</text>
+  </g>
+
+  <!-- http_client.py -->
+  <g transform="translate(490, 690)">
+    <rect width="170" height="54" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="85" y="25" class="box-title" fill="#1e40af">Agent HTTP client</text>
+    <text x="85" y="42" class="box-file" fill="#1d4ed8">[http_client.py]</text>
+  </g>
+
+  <!-- usb_monitor.py -> device_intel.py (analyzes devices) -->
+  <path d="M 165 744 L 165 783" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="105" y="756" width="115" height="18" class="edge-pill"/>
+  <text x="162" y="769" class="edge-label">analyzes devices</text>
+
+  <!-- device_intel.py -->
+  <g transform="translate(60, 790)">
+    <rect width="210" height="54" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="105" y="25" class="box-title" fill="#1e40af">USB device intelligence</text>
+    <text x="105" y="42" class="box-file" fill="#1d4ed8">[device_intel.py]</text>
+  </g>
+
+  <!-- http_client.py -> retry.py (retries requests) -->
+  <path d="M 575 744 L 575 783" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="520" y="756" width="110" height="18" class="edge-pill"/>
+  <text x="575" y="769" class="edge-label">retries requests</text>
+
+  <!-- retry.py -->
+  <g transform="translate(495, 790)">
+    <rect width="160" height="54" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="80" y="25" class="box-title" fill="#1e40af">Retry handling</text>
+    <text x="80" y="42" class="box-file" fill="#1d4ed8">[retry.py]</text>
+  </g>
+
+
+  <!-- ================= 3. SUBSYSTEM: INGESTION AND ANALYSIS ================= -->
+  <rect x="250" y="930" width="960" height="420" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="275" y="962" class="subsystem-title">Ingestion and analysis</text>
+
+  <!-- Inter-subsystem Connections -->
+  <!-- api.js -> main.py (calls REST APIs) -->
+  <path d="M 1150 819 L 1150 890 L 785 890 L 785 983" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="880" y="881" width="105" height="18" class="edge-pill"/>
+  <text x="932" y="894" class="edge-label">calls REST APIs</text>
+
+  <!-- http_client.py / retry.py -> telemetry.py (posts batches) -->
+  <path d="M 550 844 L 550 910 L 515 910 L 515 1123" class="arrow-dashed" marker-end="url(#arrow)"/>
+  <rect x="475" y="901" width="90" height="18" class="edge-pill"/>
+  <text x="520" y="914" class="edge-label">posts batches</text>
+
+  <!-- device_intel.py -> telemetry.py (posts USB events) -->
+  <path d="M 120 844 L 120 940 L 460 940 L 460 1123" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="150" y="931" width="115" height="18" class="edge-pill"/>
+  <text x="207" y="944" class="edge-label">posts USB events</text>
+
+  <!-- main.py -->
+  <g transform="translate(670, 990)">
+    <rect width="230" height="58" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="115" y="27" class="box-title" fill="#b45309">Service routes</text>
+    <text x="115" y="45" class="box-file" fill="#92400e">[main.py]</text>
+  </g>
+
+  <!-- main.py -> telemetry.py (routes telemetry) -->
+  <path d="M 720 1048 L 720 1080 L 545 1080 L 545 1123" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="580" y="1071" width="110" height="18" class="edge-pill"/>
+  <text x="635" y="1084" class="edge-label">routes telemetry</text>
+
+  <!-- main.py -> auth.py (routes login) -->
+  <path d="M 785 1048 L 785 1123" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="745" y="1078" width="80" height="18" class="edge-pill"/>
+  <text x="785" y="1091" class="edge-label">routes login</text>
+
+  <!-- main.py -> risk_engine.py (computes risk) -->
+  <path d="M 850 1048 L 850 1080 L 1030 1080 L 1030 1123" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="895" y="1071" width="100" height="18" class="edge-pill"/>
+  <text x="945" y="1084" class="edge-label">computes risk</text>
+
+  <!-- telemetry.py -->
+  <g transform="translate(440, 1130)">
+    <rect width="210" height="58" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="105" y="27" class="box-title" fill="#b45309">Telemetry API</text>
+    <text x="105" y="45" class="box-file" fill="#92400e">[telemetry.py]</text>
+  </g>
+
+  <!-- auth.py -->
+  <g transform="translate(680, 1130)">
+    <rect width="210" height="58" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="105" y="27" class="box-title" fill="#b45309">User authentication</text>
+    <text x="105" y="45" class="box-file" fill="#92400e">[auth.py]</text>
+  </g>
+
+  <!-- risk_engine.py -->
+  <g transform="translate(930, 1130)">
+    <rect width="200" height="58" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="100" y="27" class="box-title" fill="#b45309">Risk scoring</text>
+    <text x="100" y="45" class="box-file" fill="#92400e">[risk_engine.py]</text>
+  </g>
+
+  <!-- agent_auth.py -->
+  <g transform="translate(440, 1255)">
+    <rect width="210" height="58" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="105" y="27" class="box-title" fill="#b45309">Agent authentication</text>
+    <text x="105" y="45" class="box-file" fill="#92400e">[agent_auth.py]</text>
+  </g>
+
+  <!-- telemetry.py -> agent_auth.py (authenticates agent) -->
+  <path d="M 545 1188 L 545 1248" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="475" y="1210" width="140" height="18" class="edge-pill"/>
+  <text x="545" y="1223" class="edge-label">authenticates agent</text>
+
+
+  <!-- ================= 4. SUBSYSTEM: PERSISTENCE ================= -->
+  <rect x="360" y="1450" width="700" height="270" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="385" y="1482" class="subsystem-title">Persistence</text>
+
+  <!-- state.py -->
+  <g transform="translate(400, 1530)">
+    <rect width="180" height="65" rx="6" fill="#ffe4e6" stroke="#f43f5e" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="90" y="30" class="box-title" fill="#9f1239">Live agent state</text>
+    <text x="90" y="48" class="box-file" fill="#be123c">[state.py]</text>
+  </g>
+
+  <!-- database.py (Cylinder styling) -->
+  <g transform="translate(680, 1520)">
+    <rect width="220" height="85" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="2" filter="url(#shadow)"/>
+    <path d="M 680 1545 C 680 1535 900 1535 900 1545" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="110" y="42" class="box-title" fill="#991b1b" font-size="16">Database</text>
+    <text x="110" y="62" class="box-file" fill="#b91c1c">[database.py]</text>
+  </g>
+
+  <!-- Connecting Lines to Persistence -->
+  <!-- agent_auth.py -> state.py (updates state) -->
+  <path d="M 480 1313 L 480 1420 L 450 1420 L 450 1523" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="420" y="1411" width="95" height="18" class="edge-pill"/>
+  <text x="467" y="1424" class="edge-label">updates state</text>
+
+  <!-- state.py -> main.py (feeds live state) -->
+  <path d="M 540 1523 L 540 1400 L 675 1400 L 675 1055" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="560" y="1391" width="105" height="18" class="edge-pill"/>
+  <text x="612" y="1404" class="edge-label">feeds live state</text>
+
+  <!-- telemetry.py -> database.py (persists events) -->
+  <path d="M 630 1188 L 630 1440 L 720 1440 L 720 1513" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="650" y="1431" width="105" height="18" class="edge-pill"/>
+  <text x="702" y="1444" class="edge-label">persists events</text>
+
+  <!-- main.py -> database.py (rehydrates records) -->
+  <path d="M 750 1048 L 750 1465 L 770 1465 L 770 1513" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="690" y="1475" width="125" height="18" class="edge-pill"/>
+  <text x="752" y="1488" class="edge-label">rehydrates records</text>
+
+  <!-- auth.py -> database.py (reads and writes users) -->
+  <path d="M 785 1188 L 785 1490 L 830 1490 L 830 1513" class="arrow" marker-end="url(#arrow)"/>
+  <rect x="800" y="1475" width="145" height="18" class="edge-pill"/>
+  <text x="872" y="1488" class="edge-label">reads and writes users</text>
+
+  <!-- risk_engine.py -> database.py (saves risk records) -->
+  <path d="M 1030 1188 L 1030 1550 L 908 1550" class="arrow-dashed" marker-end="url(#arrow)"/>
+  <rect x="940" y="1541" width="120" height="18" class="edge-pill"/>
+  <text x="1000" y="1554" class="edge-label">saves risk records</text>
+
+</svg>
+
+</body>
+</html>
+"""
+
+out_html = BASE_DIR / "docs" / "diagram_templates" / "refined_architecture.html"
+out_html.write_text(diagram_html, encoding="utf-8")
+print(f"Wrote {out_html}")
+
+out_png = DOCS_DIR / "architecture.png"
+
+cmd = [
+    CHROME_PATH,
+    "--headless=new",
+    "--disable-gpu",
+    "--hide-scrollbars",
+    "--window-size=1540,1860",
+    f"--screenshot={out_png}",
+    out_html.as_uri()
+]
+
+res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+print(f"Finished rendering: return code {res.returncode}, size: {out_png.stat().st_size if out_png.exists() else 0}")
