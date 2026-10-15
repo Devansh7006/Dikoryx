@@ -19,6 +19,7 @@ def _default_system(agent_id: str) -> dict:
         "os": {},
         "usb": {},
         "vpn": {},
+        "compliance": None,
         "auth": {
             "logins": 0,
             "last_user": None,
@@ -92,6 +93,13 @@ async def ingest(
             elif event_type == "USER_LOGIN":
                 system["auth"]["logins"] += 1
                 system["auth"]["last_user"] = ev.get("username")
+            elif event_type in ("COMPLIANCE_STATUS", "COMPLIANCE_EVENT"):
+                system["compliance"] = {
+                    "controls": ev.get("controls") or {},
+                    "compliance_score": ev.get("compliance_score"),
+                    "enforced": ev.get("enforced") or [],
+                    "timestamp": ev.get("timestamp") or time.time(),
+                }
 
         log_perf("request_parsing", perf_counter() - parse_start)
 

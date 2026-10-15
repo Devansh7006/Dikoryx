@@ -88,6 +88,17 @@ def get_system(agent_id: str):
                         if (ev.event_type or "").upper() == "VPN_EVENT" and isinstance(ev.data, dict):
                             system["vpn"] = ev.data.get("vpn_info", {})
                             break
+
+                if not system.get("compliance"):
+                    for ev in db_evs:
+                        if (ev.event_type or "").upper() in ("COMPLIANCE_STATUS", "COMPLIANCE_EVENT") and isinstance(ev.data, dict):
+                            system["compliance"] = {
+                                "controls": ev.data.get("controls") or {},
+                                "compliance_score": ev.data.get("compliance_score"),
+                                "enforced": ev.data.get("enforced") or [],
+                                "timestamp": ev.data.get("timestamp") or time.time(),
+                            }
+                            break
     except Exception as e:
         print("[DB HYDRATE ERROR]", e)
     finally:

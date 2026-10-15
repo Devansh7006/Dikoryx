@@ -59,6 +59,8 @@ def _extract_signals(evs, system):
     download_bytes = 0
     vpn_active = False
     session_duration = None
+    compliance_score = None
+    enforcement_triggered = False
 
     for ev in evs:
         try:
@@ -91,12 +93,26 @@ def _extract_signals(evs, system):
             if "USER_SESSION" in etype:
                 session_duration = s.get("duration_bucket")
 
+            if "COMPLIANCE" in etype:
+                if ev.get("compliance_score") is not None:
+                    compliance_score = ev.get("compliance_score")
+
+                if ev.get("enforced"):
+                    enforcement_triggered = True
+
         except Exception:
             continue
 
     # fallback from system
     if not vpn_active:
         vpn_active = (system.get("vpn") or {}).get("vpn") is True
+
+    comp = system.get("compliance") or {}
+    if compliance_score is None:
+        compliance_score = comp.get("compliance_score")
+
+    if not enforcement_triggered and comp.get("enforced"):
+        enforcement_triggered = True
 
     return {
         "file_writes": file_writes,
@@ -107,6 +123,8 @@ def _extract_signals(evs, system):
         "download_bytes": download_bytes,
         "vpn_active": vpn_active,
         "session_duration": session_duration,
+        "compliance_score": compliance_score,
+        "enforcement_triggered": enforcement_triggered,
     }
 
 
@@ -224,6 +242,14 @@ def compute_risk(agent_id, events, system, dlp_alerts=None):
     if signals["upload_bytes"] > signals["download_bytes"] * 2:
         risk_score += 30
         reasons.append("High outbound traffic")
+
+    if signals.get("compliance_score") and signals["compliance_score"] < 60:
+        risk_score += 20
+        reasons.append("Low compliance score")
+
+    if signals.get("enforcement_triggered"):
+        risk_score += 30
+        reasons.append("Security enforcement triggered")
 
     # -------- DLP ENGINE --------
     if dlp_alerts:

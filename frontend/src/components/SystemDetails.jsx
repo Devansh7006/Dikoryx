@@ -59,11 +59,36 @@ function useAgentData(agentId) {
         if (vpnEvents.length > 0) resolvedVpn = vpnEvents[0].vpn_info;
       }
 
+      // COMPLIANCE & USER ENFORCEMENT — Level 1: system.compliance; Level 2: scan events array
+      let resolvedCompliance = system?.compliance ?? null;
+      if (!resolvedCompliance) {
+        const complianceEvents = events
+          .filter(ev => {
+            const t = (ev.event_type || "").toUpperCase();
+            return t === "COMPLIANCE_STATUS" || t === "COMPLIANCE_EVENT";
+          })
+          .sort((a, b) => {
+            const tsA = a.received_at ?? a.timestamp ?? 0;
+            const tsB = b.received_at ?? b.timestamp ?? 0;
+            return tsB - tsA;
+          });
+
+        if (complianceEvents.length > 0) {
+          const ev = complianceEvents[0];
+          resolvedCompliance = {
+            compliance_score: ev.compliance_score ?? null,
+            controls: ev.controls || {},
+            enforced: ev.enforced ?? [],
+            timestamp: ev.timestamp ?? ev.received_at ?? null,
+          };
+        }
+      }
+
       // AI — tolerant resolution: risk payload, system payload, or AI_* events
       const ai = resolveAi(sysData, riskData, system, events);
 
       setData({
-        system, events, risk: riskData || null, resolvedOs, resolvedVpn, ai,
+        system, events, risk: riskData || null, resolvedOs, resolvedVpn, compliance: resolvedCompliance, ai,
       });
       setError(false);
     }).catch(() => setError(true)).finally(() => setLoading(false));
@@ -326,9 +351,58 @@ function AiAnalysisPanel({ ai }) {
 
 
 
+const CompliancePanel = ({ compliance }) => {
+  if (!compliance) {
+    return (
+      <div className="compliance-no-data">
+        <AlertTriangle size={14} style={{ marginRight: 6, opacity: 0.6 }} />
+        <span>No compliance data yet.</span>
+        <p style={{ fontSize: "0.75rem", opacity: 0.5, marginTop: 6, marginBottom: 0 }}>
+          Waiting for agent — checks CIS baseline and auto-enforces security policies.
+        </p>
+      </div>
+    );
+  }
+
+  const score = compliance.compliance_score ?? null;
+  const controls = compliance.controls || {};
+  const enforced = compliance.enforced || [];
+  const scoreColor = typeof score !== "number" ? "gray" : score >= 80 ? "green" : score >= 50 ? "yellow" : "red";
+
+  return (
+    <>
+      <div className={`compliance-score compliance-${scoreColor}`}>
+        <span className="label">Compliance Score</span>
+        <span className="value">{score ?? "N/A"}{typeof score === "number" ? "%" : ""}</span>
+      </div>
+      {enforced.length > 0 && (
+        <div className="compliance-enforced-note">
+          Auto-enforced: {enforced.join(", ")}
+        </div>
+      )}
+      <div className="compliance-grid">
+        {[
+          { label: "Firewall",        key: "firewall_enabled" },
+          { label: "Disk Encryption", key: "disk_encryption" },
+          { label: "Screen Lock",     key: "screen_lock_policy" },
+          { label: "Antivirus",       key: "antivirus_running" },
+          { label: "USB Restricted",  key: "usb_restricted" },
+        ].map(({ label, key }) => (
+          <div className="compliance-row" key={key}>
+            <span className="label">{label}</span>
+            <span className="value" style={{ color: controls[key] ? "var(--neon-cyan)" : "var(--neon-pink)" }}>
+              {controls[key] ? "PASS" : "FAIL"}
+            </span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+};
+
 /* ================= MAIN COMPONENT ================= */
 export default function SystemDetails({ agentId }) {
-  const { system, events, risk, resolvedOs, resolvedVpn, ai, loading, error, refetch } = useAgentData(agentId);
+  const { system, events, risk, resolvedOs, resolvedVpn, compliance, ai, loading, error, refetch } = useAgentData(agentId);
   const stats = useAgentStats(events);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const chartData = useMemo(() => generateChartData(stats.network.sent > 0 ? 50 : 10), [stats.network.sent]);
@@ -459,6 +533,17 @@ export default function SystemDetails({ agentId }) {
               <StatRow icon={Copy} label="Clipboard Hooks" value={stats.clipboard.total} color="pink" />
               <StatRow icon={HardDrive} label="Hardware Risk" value={system.usb?.intel?.risk || "LOW"} color={system.usb?.intel?.risk === "HIGH" ? "pink" : "cyan"} />
               <StatRow icon={Cpu} label="Active Processes" value={stats.processes.distinct.size} color="cyan" />
+            </div>
+            <div className="card-header" style={{ marginTop: "1rem" }}>
+              <Lock size={16} /> <span>CIS_COMPLIANCE_ENFORCEMENT</span>
+              {compliance?.timestamp && (
+                <span style={{ marginLeft: "auto", fontSize: "0.7rem", opacity: 0.5 }} className="mono">
+                  {new Date(compliance.timestamp * 1000).toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+            <div className="card-body">
+              <CompliancePanel compliance={compliance} />
             </div>
           </div>
 

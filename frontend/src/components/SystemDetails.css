@@ -867,3 +867,107 @@
   font-size: 0.8rem;
   opacity: 0.9;
 }
+
+/* ================= COMPLIANCE & USER ENFORCEMENT PANEL ================= */
+
+.compliance-no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: .75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  font-size: .85rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+}
+
+.compliance-no-data span {
+  display: flex;
+  align-items: center;
+}
+
+.compliance-hint {
+  margin: 0;
+  font-size: .75rem;
+  opacity: 0.5;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.compliance-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Orbitron', sans-serif;
+  margin-bottom: .75rem;
+  padding: .5rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.compliance-score .label {
+  font-size: .8rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #a0aabf;
+}
+
+.compliance-score .value {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.compliance-green .value {
+  color: #22c55e;
+  text-shadow: 0 0 10px rgba(34, 197, 94, .7);
+}
+
+.compliance-yellow .value {
+  color: #eab308;
+  text-shadow: 0 0 10px rgba(234, 179, 8, .7);
+}
+
+.compliance-red .value {
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, .7);
+}
+
+.compliance-gray .value {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.compliance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  font-size: .8rem;
+  margin-top: .5rem;
+}
+
+.compliance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.compliance-row .label {
+  color: #94a3b8;
+  letter-spacing: 1px;
+}
+
+.compliance-row .value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: .9rem;
+}
+
+.compliance-enforced-note {
+  font-size: .75rem;
+  color: var(--neon-yellow);
+  margin-bottom: .5rem;
+  opacity: .9;
+  padding: .25rem .5rem;
+  background: rgba(250, 204, 21, 0.08);
+  border-left: 2px solid var(--neon-yellow);
+  font-weight: 500;
+}

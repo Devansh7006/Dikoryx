@@ -291,9 +291,20 @@ def print_usb_summary(mount, meta, diff, last_send_time):
     print(f"  total files: {len(meta)}")
     if diff:
         print(f"  added: {diff.get('added')} removed: {diff.get('removed')} modified: {diff.get('modified')}")
-    if last_send_time:
-        print(f"  last sent: {time.ctime(last_send_time)}")
+COMPLIANCE_EVENT_TYPE = "COMPLIANCE_STATUS"
 
+# ----------------------- Compliance event builder -----------------------
+def build_compliance_event(agent_id: str, os_info: Dict[str, Any], raw: Dict[str, Any]) -> Dict[str, Any]:
+    inner = raw.get("compliance") or raw
+    return {
+        "event_type": COMPLIANCE_EVENT_TYPE,
+        "agent_id": agent_id,
+        "os": os_info,
+        "compliance_score": inner.get("compliance_score") or raw.get("compliance_score"),
+        "controls": inner.get("controls") or raw.get("controls", {}),
+        "enforced": inner.get("enforced") or raw.get("enforced", []),
+        "timestamp": raw.get("timestamp") or time.time(),
+    }
 
 
 # ----------------------- Main agent -----------------------
@@ -436,6 +447,10 @@ def main():
             "agent.collectors.windows.user_session", "UserSessionCollector",
             os.path.join("collectors", "windows", "user_session.py"))
 
+        compliance_collector = _win_collector(
+            "agent.collectors.windows.compliance", "ComplianceCollector",
+            os.path.join("collectors", "windows", "compliance.py"))
+
         
 
         # Auth collectors
@@ -524,6 +539,19 @@ def main():
                         print(f"\n[SESSION] active:{s.get('active')} bucket:{s.get('duration_bucket')} admin:{s.get('is_admin')}")
                 except Exception:
                     print("[!] User session flush error:", traceback.format_exc())
+
+            if compliance_collector is not None:
+                try:
+                    raw_compliance = compliance_collector.flush_if_needed()
+                    if raw_compliance:
+                        compliance_event = build_compliance_event(agent_id, os_info, raw_compliance)
+                        batch.append(compliance_event)
+                        print(f"\n[COMPLIANCE] event_type={compliance_event['event_type']} "
+                              f"score={compliance_event.get('compliance_score')} "
+                              f"controls={list((compliance_event.get('controls') or {}).keys())} "
+                              f"enforced={compliance_event.get('enforced', [])}")
+                except Exception:
+                    print("[!] Compliance flush error:", traceback.format_exc())
 
             
 
