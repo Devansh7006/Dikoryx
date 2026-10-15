@@ -58,44 +58,40 @@ Dikoryx couples a lightweight endpoint agent with a FastAPI backend and a cyber-
 
 ## 🏗️ Architecture
 
+```mermaid
+flowchart TD
+    subgraph AnalystLayer ["Analysis & Monitoring"]
+        Analyst["🧑‍💻 Security Analyst<br/>(Web Browser)"]
+    end
+
+    subgraph PresentationLayer ["Frontend Layer"]
+        Frontend["💻 React 18 + Vite Dashboard<br/>Cyberpunk UI • Live Telemetry • Threat Matrix"]
+    end
+
+    subgraph BackendLayer ["Backend Services"]
+        Backend["⚙️ FastAPI Application<br/>Ingest Endpoints • Auth • Agent Management"]
+        RiskEngine["🧠 Hybrid Risk Engine<br/>Rule Heuristics + IsolationForest ML"]
+    end
+
+    subgraph DataLayer ["Data Storage"]
+        DB[("🗄️ PostgreSQL / SQLite<br/>Users • Events • Logs • Systems")]
+    end
+
+    subgraph AgentLayer ["Endpoint Telemetry"]
+        Agent["🖥️ Endpoint Agent (Python Daemon)<br/>USB • File Activity • Network Bandwidth • Processes • VPN"]
+    end
+
+    Analyst <-->|"HTTPS / Web GUI"| Frontend
+    Frontend <-->|"REST API (JSON)"| Backend
+    Backend <-->|"Real-Time Evaluation"| RiskEngine
+    Backend <-->|"Persists & Reads Events"| DB
+    Agent -->|"Ingest Telemetry (HTTPS / Bearer Auth)"| Backend
 ```
-                         ┌────────────────────────┐
-                         │   Security Analyst     │
-                         │  (Dashboard Browser)   │
-                         └───────────┬────────────┘
-                                     │
-                                     ▼
-                         ┌────────────────────────┐
-                         │   FRONTEND (Vite/React)│
-                         │  Auth · Telemetry · UI │
-                         └───────────┬────────────┘
-                                     │  REST API (JSON)
-                                     ▼
-                         ┌────────────────────────┐
-                         │   BACKEND (FastAPI)    │
-                         │ ┌────────────────────┐ │
-                         │ │ Risk Engine & ML   │ │
-                         │ │ (Rules + Isolation)│ │
-                         │ └────────────────────┘ │
-                         └─────┬────────────┬─────┘
-                persists / reads│            │ serves data
-                               ▼            ▼
-                         ┌───────────┐
-                         │PostgreSQL │
-                         │  / SQLite │
-                         └───────────┘
-                               ▲
-                               │ Ingest Telemetry (HTTPS)
-                               │
-                         ┌────────────────────────┐
-                         │  ENDPOINT AGENT        │
-                         │  • USB Activity        │
-                         │  • File Modification   │
-                         │  • Network & Bandwidth │
-                         │  • Process Tracking    │
-                         │  • VPN & Public IP     │
-                         └────────────────────────┘
-```
+
+**Architecture Data Flow:**
+1. **Endpoint Agent:** Collects system metrics (USB transfers, file writes/deletions, network volume, active processes, and public IP/VPN status) and batches telemetry to the FastAPI backend over HTTPS.
+2. **Backend & Risk Engine:** Ingests raw telemetry, executes rule-based heuristics and the scikit-learn `IsolationForest` anomaly detector, calculates threat scores, and saves records to PostgreSQL / SQLite.
+3. **Frontend Dashboard:** Polls the backend API in real time and renders interactive visual analytics, threat gauges, and network volume sparklines for security analysts.
 
 ---
 
