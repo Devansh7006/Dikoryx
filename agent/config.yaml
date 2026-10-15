@@ -1,0 +1,4 @@
+# Copy this file's values into your own deployment config, or set the
+# equivalent environment variables (ITD_BACKEND, ITD_AGENT_ID, etc).
+backend_url: "http://127.0.0.1:8000"
+heartbeat_interval: 10
