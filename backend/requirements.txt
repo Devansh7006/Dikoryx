@@ -3,7 +3,7 @@ uvicorn[standard]
 pydantic
 sqlalchemy
 requests
-psycopg2-binary
+psycopg[binary]
 scikit-learn
 
 argon2-cffi
